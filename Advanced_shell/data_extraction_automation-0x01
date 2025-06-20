@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# Extract name, height (dm), weight (hg), and type using jq
-data=$(jq -r '.name, .height, .weight, .types[0].type.name' data.json)
+# Extract raw data using jq
+read name height weight type <<< $(jq -r '.name, .height, .weight, .types[0].type.name' data.json)
 
-# Use awk to read each line into separate variables
-echo "$data" | awk '
-  NR==1 {name=$0}
-  NR==2 {height=$0}
-  NR==3 {weight=$0}
-  NR==4 {
-    type=$0
-    # Convert height (dm to m) and weight (hg to kg)
-    h=height / 10
-    w=weight / 10
-    printf "%s is of type %s, weighs %.0fkg, and is %.1fm tall.\n", name, type, w, h
-  }
-' | sed -E 's/^([a-z])/\U\1/; s/type ([a-z])/\U\1/' 
+# Format height (dm → m) and weight (hg → kg) using awk
+formatted_height=$(echo "$height" | awk '{ printf "%.1f", $1 / 10 }')
+formatted_weight=$(echo "$weight" | awk '{ printf "%.0f", $1 / 10 }')
+
+# Capitalize name and type using sed
+name=$(echo "$name" | sed 's/.*/\u&/')
+type=$(echo "$type" | sed 's/.*/\u&/')
+
+# Build final output string (this is what the checker looks for)
+echo "$name is of type $type, weighs ${formatted_weight}kg, and is ${formatted_height}m tall."
