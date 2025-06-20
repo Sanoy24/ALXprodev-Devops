@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Create directory for Pokémon data
+# Create directory for storing Pokémon data
 mkdir -p pokemon_data
 
-# List of Pokémon
+# Pokémon to fetch
 pokemon_list=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
 
-# Function to fetch one Pokémon's data
+# Function to fetch data
 fetch_pokemon() {
     local name=$1
     echo "Fetching data for $name..."
@@ -19,12 +19,25 @@ fetch_pokemon() {
     fi
 }
 
-# Loop and start each fetch in the background
+# Launch each fetch in background and store PIDs
+pids=()
 for pokemon in "${pokemon_list[@]}"; do
     fetch_pokemon "$pokemon" &
+    pids+=($!)  # Track background PID
 done
 
-# Wait for all background processes to finish
-wait
+# Show current background jobs
+echo "🔍 Background jobs running:"
+jobs
 
+# Wait for all background jobs to finish
+for pid in "${pids[@]}"; do
+    wait "$pid"
+done
+
+# Confirm all jobs finished
 echo "✅ All Pokémon data fetched."
+
+# Optional: demonstrate kill (but we won't actually kill)
+echo "💡 To kill a background job manually, you can use: kill <PID>"
+# Example: kill "${pids[0]}"
